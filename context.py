@@ -40,9 +40,6 @@ class BackTestContext(object):
         self.quote_balance: Decimal = Decimal("0")
         self.fee_rate: Decimal = Decimal("0")
 
-        self.last_kline: Optional[KLine] = None
-        self.cached_klines: List[KLine] = list()
-        self.no_left_kline: bool = False
         self.orders: List[Order] = list()
 
     def init_currency_balances(self, base_balance: Decimal, quote_balance: Decimal):
@@ -74,9 +71,18 @@ class BackTestContext(object):
         order = Order(sell_ts, Side.Sell, price, quantity, fee)
         self.orders.append(order)
 
+
+class BackTestKLineCached(object):
+    def __init__(self, context: BackTestContext):
+        self.last_kline: Optional[KLine] = None
+        self.cached_klines: List[KLine] = list()
+        self.no_left_kline: bool = False
+        self.context: BackTestContext = context
+
     def get_next_kline(self, from_ts: int) -> Optional[KLine]:
         if len(self.cached_klines) < 20 and not self.no_left_kline:
-            klines = get_next_klines(self.kline_provider, self.symbol, self.interval, from_ts, 1000)
+            klines = get_next_klines(self.context.kline_provider, self.context.symbol, self.context.interval, from_ts,
+                                     1000)
             if len(klines) == 0:
                 self.no_left_kline = True
             else:
@@ -91,7 +97,7 @@ class BackTestContext(object):
             return None
 
         self.last_kline = self.cached_klines.pop(0)
-        if self.last_kline.open_time / 1000 > self.end_ts:
+        if self.last_kline.open_time / 1000 > self.context.end_ts:
             return None
 
         return self.last_kline
