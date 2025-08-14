@@ -23,9 +23,8 @@ strategy = IStrategy(context)
 
 from_ts = start_ts
 while True:
-    kline = kline_cached.get_next_kline(from_ts)
+    kline = kline_cached.get_next_kline()
     if kline is None:
         break
 
-    from_ts = kline.open_time / 1000
     strategy.run(kline)

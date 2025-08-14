@@ -77,15 +77,18 @@ class BackTestKLineCached(object):
         self.last_kline: Optional[KLine] = None
         self.cached_klines: List[KLine] = list()
         self.no_left_kline: bool = False
+        self.left_kline_next_ts: int = context.from_ts
         self.context: BackTestContext = context
 
-    def get_next_kline(self, from_ts: int) -> Optional[KLine]:
+    def get_next_kline(self) -> Optional[KLine]:
         if len(self.cached_klines) < 20 and not self.no_left_kline:
-            klines = get_next_klines(self.context.kline_provider, self.context.symbol, self.context.interval, from_ts,
+            klines = get_next_klines(self.context.kline_provider, self.context.symbol, self.context.interval,
+                                     self.left_kline_next_ts,
                                      1000)
             if len(klines) == 0:
                 self.no_left_kline = True
             else:
+                self.left_kline_next_ts = klines[-1]["open_time"] // 1000 + 1
                 self.cached_klines.extend(
                     [
                         KLine(k["open_time"], Decimal(k["open_price"]), Decimal(k["close_price"]),
