@@ -38,6 +38,8 @@ class BackTestContext(object):
 
         self.base_balance: Decimal = Decimal("0")
         self.quote_balance: Decimal = Decimal("0")
+        self.base_fee: Decimal = Decimal("0")
+        self.quote_fee: Decimal = Decimal("0")
         self.fee_rate: Decimal = Decimal("0")
 
         self.orders: List[Order] = list()
@@ -52,6 +54,9 @@ class BackTestContext(object):
     def get_currency_balances(self) -> Tuple[Decimal, Decimal]:
         return self.base_balance, self.quote_balance
 
+    def get_exchange_fee(self) -> Tuple[Decimal, Decimal]:
+        return self.base_fee, self.quote_fee
+
     def get_exchange_fee_rate(self) -> Decimal:
         return self.fee_rate
 
@@ -59,6 +64,7 @@ class BackTestContext(object):
         fee = quantity * self.fee_rate
         self.base_balance += quantity - fee
         self.quote_balance -= price * quantity
+        self.base_fee += fee
         assert self.quote_balance >= Decimal("0")
         order = Order(buy_ts, Side.Buy, price, quantity, fee)
         self.orders.append(order)
@@ -68,6 +74,7 @@ class BackTestContext(object):
         assert self.base_balance >= Decimal("0")
         fee = price * quantity * self.fee_rate
         self.quote_balance += price * quantity - fee
+        self.quote_fee += fee
         order = Order(sell_ts, Side.Sell, price, quantity, fee)
         self.orders.append(order)
 
@@ -95,7 +102,7 @@ class BackTestKLineCached(object):
             klines = get_next_klines(self.context.kline_provider, self.context.symbol, self.context.interval,
                                      self.left_kline_next_ts,
                                      1000)
-            if len(klines) == 0:
+            if klines is None or len(klines) == 0:
                 self.no_left_kline = True
             else:
                 unit = self.context.interval.value[-1]
