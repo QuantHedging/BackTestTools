@@ -80,6 +80,16 @@ class BackTestKLineCached(object):
         self.left_kline_next_ts: int = context.from_ts
         self.context: BackTestContext = context
 
+    @staticmethod
+    def get_interval(unit: str, digital: int):
+        if unit == "m":
+            digital *= 60
+        elif unit == "h":
+            digital *= 3600
+        elif unit == "d":
+            digital *= 86400
+        return digital
+
     def get_next_kline(self) -> Optional[KLine]:
         if len(self.cached_klines) < 20 and not self.no_left_kline:
             klines = get_next_klines(self.context.kline_provider, self.context.symbol, self.context.interval,
@@ -88,7 +98,12 @@ class BackTestKLineCached(object):
             if len(klines) == 0:
                 self.no_left_kline = True
             else:
-                self.left_kline_next_ts = klines[-1]["open_time"] // 1000 + 1
+                unit = self.context.interval.value[-1]
+                assert unit in ("s", "m", "h", "d")
+                digital = int(self.context.interval.value[:-1])
+                interval = BackTestKLineCached.get_interval(unit, digital)
+
+                self.left_kline_next_ts = klines[-1]["open_time"] // 1000 + interval
                 self.cached_klines.extend(
                     [
                         KLine(k["open_time"], Decimal(k["open_price"]), Decimal(k["close_price"]),
