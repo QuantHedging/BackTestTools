@@ -17,7 +17,7 @@ kline_provider = os.environ.get("KLINE_PROVIDER")
 kline_symbol = KLineSymbol.LtcUsdt
 kline_interval = KLineInterval.OneMinute
 
-start_ts = int(time.time()) - 86400 * 500
+start_ts = int(time.time()) - 86400 * 300
 
 context = BackTestContext(kline_provider, kline_symbol, kline_interval, start_ts)
 context.init_currency_balances(Decimal("0"), Decimal("10000"))
@@ -25,7 +25,8 @@ context.init_exchange_fee_rate(Decimal("0.002"))
 kline_cached = BackTestKLineCached(context)
 
 # strategy = IStrategy(context)
-strategy = MovingAverageTrendStrategy(context, 20, 30, Decimal("0.04"), Decimal("0.04"))
+strategy = MovingAverageTrendStrategy(context, 50, 50,
+                                      Decimal("0.04"), Decimal("0.04"), Decimal("0.05"))
 
 from_ts = start_ts
 while True:
