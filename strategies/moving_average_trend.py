@@ -31,7 +31,8 @@ class MovingAverageTrendStrategy(IStrategy):
 
         self.kline_wnd.append(kline)
         if len(self.kline_wnd) > self.kline_wnd_size:
-            self.kline_wnd = self.kline_wnd[1:]
+            # self.kline_wnd = self.kline_wnd[1:]
+            self.kline_wnd.pop(0)
 
         if len(self.kline_wnd) < self.kline_wnd_size:
             return
@@ -39,7 +40,8 @@ class MovingAverageTrendStrategy(IStrategy):
         avg_price: Decimal = sum(list(map(lambda x: x.close_price, self.kline_wnd))) / Decimal(self.kline_wnd_size)
         self.avg_line_wnd.append(avg_price)
         if len(self.avg_line_wnd) > self.avg_line_wnd_size:
-            self.avg_line_wnd = self.avg_line_wnd[1:]
+            # self.avg_line_wnd = self.avg_line_wnd[1:]
+            self.avg_line_wnd.pop(0)
 
         if len(self.avg_line_wnd) < self.avg_line_wnd_size:
             return
